@@ -112,14 +112,21 @@ type CreateResponseRequest struct {
     // Reference: docs/providers/openai.md lines 7095-7400
     PreviousResponseID string `json:"previous_response_id,omitempty"`
     
-    // ReasoningEffort controls o-series reasoning depth (optional, "low"/"medium"/"high").
-    ReasoningEffort string `json:"reasoning,omitempty"`
+    // Reasoning controls o-series reasoning depth (optional).
+    // If nil, uses default reasoning behavior. If present, Effort must be "low", "medium", or "high".
+    Reasoning *ReasoningConfig `json:"reasoning,omitempty"`
 }
 
 // Message represents a single message in multi-turn input.
 type Message struct {
     Role    string      `json:"role"`    // "user", "assistant", "developer"
     Content interface{} `json:"content"` // string or []ContentPart
+}
+
+// ReasoningConfig controls reasoning behavior for o-series models.
+type ReasoningConfig struct {
+    // Effort specifies reasoning depth: "low", "medium", or "high".
+    Effort string `json:"effort"`
 }
 
 // TextFormat defines structured output schema.
@@ -147,6 +154,12 @@ func (r *CreateResponseRequest) Validate() error {
     if r.TextFormat != nil && r.TextFormat.Type == "json_schema" && !r.TextFormat.Strict {
         return ErrInvalidTextFormat // "Structured outputs require strict: true"
     }
+    if r.Reasoning != nil {
+        effort := r.Reasoning.Effort
+        if effort != "low" && effort != "medium" && effort != "high" {
+            return ErrInvalidReasoningEffort // "Reasoning effort must be 'low', 'medium', or 'high'"
+        }
+    }
     return nil
 }
 ```
@@ -157,6 +170,7 @@ func (r *CreateResponseRequest) Validate() error {
 - `Temperature`: Optional, 0.0-2.0 if provided
 - `MaxTokens`: Optional, >0 if provided
 - `TextFormat`: If json_schema, Strict must be true
+- `Reasoning`: If provided, Effort must be "low", "medium", or "high"
 - `Stream`: If true, caller must use StreamResponse() method
 
 **Relationships**: 
