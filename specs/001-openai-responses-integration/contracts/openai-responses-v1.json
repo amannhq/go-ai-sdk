@@ -1,0 +1,490 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AISDK-Go OpenAI Responses Integration",
+    "version": "1.0.0",
+    "description": "Go SDK contracts for OpenAI Responses API - typed request/response definitions per constitution Principle II",
+    "contact": {
+      "name": "AISDK-Go Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.openai.com/v1",
+      "description": "OpenAI Production API"
+    }
+  ],
+  "paths": {
+    "/responses": {
+      "post": {
+        "summary": "Create Response",
+        "description": "Generate text or structured output from OpenAI model. Reference: docs/providers/openai.md lines 8-931, 934-1344",
+        "operationId": "createResponse",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateResponseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Maximum requests per time window"
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Requests remaining in current window"
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Unix timestamp when rate limit resets"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                },
+                "description": "Seconds to wait before retrying"
+              }
+            }
+          },
+          "500": {
+            "description": "Server error - retryable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "OpenAI API key (set via OPENAI_API_KEY environment variable or ClientConfig.APIKey)"
+      }
+    },
+    "schemas": {
+      "CreateResponseRequest": {
+        "type": "object",
+        "required": ["model", "input"],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "OpenAI model ID (e.g., 'gpt-5', 'gpt-4o')",
+            "examples": ["gpt-5", "gpt-4o", "gpt-4o-mini"]
+          },
+          "input": {
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "Simple text prompt"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Message"
+                },
+                "description": "Multi-turn conversation messages"
+              }
+            ]
+          },
+          "instructions": {
+            "type": "string",
+            "description": "High-level behavior guidance (takes priority over user messages)"
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 2.0,
+            "description": "Randomness control (0.0 = deterministic, 2.0 = maximum randomness)"
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum response length in tokens"
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable streaming mode (use StreamResponse() method if true)"
+          },
+          "text": {
+            "$ref": "#/components/schemas/TextFormat",
+            "description": "Structured output schema (reference: docs/providers/openai.md lines 2193-4038)"
+          },
+          "previous_response_id": {
+            "type": "string",
+            "description": "Link to prior conversation turn (reference: docs/providers/openai.md lines 7095-7400)"
+          },
+          "reasoning": {
+            "type": "object",
+            "properties": {
+              "effort": {
+                "type": "string",
+                "enum": ["low", "medium", "high"],
+                "description": "Reasoning depth for o-series models"
+              }
+            }
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "developer"],
+            "description": "Message role per OpenAI model spec"
+          },
+          "content": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ContentPart"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "TextFormat": {
+        "type": "object",
+        "required": ["type", "name", "schema", "strict"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["json_schema"],
+            "description": "Format type (only json_schema supported)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Schema name for identification"
+          },
+          "schema": {
+            "type": "object",
+            "description": "JSON Schema definition (must include type, properties, required)"
+          },
+          "strict": {
+            "type": "boolean",
+            "enum": [true],
+            "description": "Must be true for structured outputs"
+          }
+        }
+      },
+      "Response": {
+        "type": "object",
+        "required": ["id", "object", "output", "usage", "model", "created"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique response identifier (use in next request's previous_response_id)"
+          },
+          "object": {
+            "type": "string",
+            "enum": ["response"],
+            "description": "Object type (always 'response')"
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutputItem"
+            },
+            "description": "Model-generated content (may contain multiple items)"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/TokenUsage"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model that generated the response"
+          },
+          "created": {
+            "type": "integer",
+            "description": "Unix timestamp of creation"
+          }
+        }
+      },
+      "OutputItem": {
+        "type": "object",
+        "required": ["id", "type", "role", "content"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique item identifier"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["message", "function_call"],
+            "description": "Item type"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["assistant", "tool"],
+            "description": "Message role"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentPart"
+            },
+            "description": "Content fragments"
+          }
+        }
+      },
+      "ContentPart": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["output_text", "refusal"],
+            "description": "Content type"
+          },
+          "text": {
+            "type": "string",
+            "description": "Text content (present for output_text type)"
+          },
+          "refusal": {
+            "type": "string",
+            "description": "Refusal reason (present for refusal type)"
+          },
+          "annotations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Annotation"
+            },
+            "description": "Inline citations or metadata"
+          }
+        }
+      },
+      "Annotation": {
+        "type": "object",
+        "required": ["type", "text", "start_index", "end_index"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Annotation type"
+          },
+          "text": {
+            "type": "string",
+            "description": "Annotation text"
+          },
+          "start_index": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Start position in parent text"
+          },
+          "end_index": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "End position in parent text"
+          }
+        }
+      },
+      "TokenUsage": {
+        "type": "object",
+        "required": ["prompt_tokens", "completion_tokens", "total_tokens"],
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Tokens in prompt"
+          },
+          "completion_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Tokens in completion"
+          },
+          "total_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total tokens (prompt + completion)"
+          }
+        }
+      },
+      "APIError": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "OpenAI error code"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "type": {
+                "type": "string",
+                "description": "Error category"
+              }
+            }
+          }
+        }
+      },
+      "RateLimitError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/APIError"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "rate_limit_info": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer",
+                    "description": "Maximum requests per window"
+                  },
+                  "remaining": {
+                    "type": "integer",
+                    "description": "Requests remaining"
+                  },
+                  "reset_at": {
+                    "type": "integer",
+                    "description": "Unix timestamp when limit resets"
+                  },
+                  "retry_after": {
+                    "type": "integer",
+                    "description": "Seconds to wait before retry"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "StreamEvent": {
+        "type": "object",
+        "required": ["type"],
+        "description": "Single event in streaming response (reference: docs/providers/openai.md lines 7618-7751)",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "response.created",
+              "response.in_progress",
+              "response.completed",
+              "response.failed",
+              "response.output_item.added",
+              "response.output_item.done",
+              "response.content_part.added",
+              "response.content_part.done",
+              "response.output_text.delta",
+              "response.output_text.done",
+              "response.refusal.delta",
+              "response.refusal.done",
+              "error"
+            ],
+            "description": "Event type"
+          },
+          "response_id": {
+            "type": "string",
+            "description": "Parent response identifier"
+          },
+          "item_id": {
+            "type": "string",
+            "description": "Parent output item identifier"
+          },
+          "delta": {
+            "type": "string",
+            "description": "Incremental content (for delta events)"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "description": "Error details (for error events)"
+          },
+          "output": {
+            "$ref": "#/components/schemas/OutputItem",
+            "description": "Completed item (for item_done events)"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/TokenUsage",
+            "description": "Token usage (for response_completed events)"
+          }
+        }
+      }
+    }
+  }
+}
