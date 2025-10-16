@@ -16,9 +16,9 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Initialize Go module with `go mod init github.com/amannhq/go-ai-sdk` and create basic directory structure (pkg/aisdk/, pkg/providers/, pkg/middleware/, internal/, examples/, tests/)
-- [ ] T002 [P] Create docs/README.md with SDK overview, design philosophy (Go-first, strongly typed, extensible), and quick links to examples
-- [ ] T003 [P] Create docs/architecture.md documenting provider interface pattern, middleware layering, and stdlib-only approach per research.md decisions
+- [X] T001 Initialize Go module with `go mod init github.com/amannhq/go-ai-sdk` and create basic directory structure (pkg/aisdk/, pkg/providers/, pkg/middleware/, internal/, examples/, tests/)
+- [X] T002 [P] Create docs/README.md with SDK overview, design philosophy (Go-first, strongly typed, extensible), and quick links to examples
+- [X] T003 [P] Create docs/architecture.md documenting provider interface pattern, middleware layering, and stdlib-only approach per research.md decisions
 - [ ] T004 [P] Configure GitHub Actions workflow for `gofmt`, `go vet`, `golint`, and unit test execution on PR
 
 ---
@@ -31,35 +31,35 @@
 
 ### Core Types & Errors
 
-- [ ] T005 [P] Create pkg/aisdk/errors.go with APIError struct (Status int, Code string, Message string, CorrelationID string) and constructor functions
-- [ ] T006 [P] Create pkg/aisdk/errors.go RateLimitError extending APIError with RateLimitInfo (Limit, Remaining, ResetAt, RetryAfter fields per data-model.md)
-- [ ] T007 [P] Implement error wrapping helpers (WrapError, IsRetryable, IsRateLimitError) using errors.Is/As for classification
+- [X] T005 [P] Create pkg/aisdk/errors.go with APIError struct (Status int, Code string, Message string, CorrelationID string) and constructor functions
+- [X] T006 [P] Create pkg/aisdk/errors.go RateLimitError extending APIError with RateLimitInfo (Limit, Remaining, ResetAt, RetryAfter fields per data-model.md)
+- [X] T007 [P] Implement error wrapping helpers (WrapError, IsRetryable, IsRateLimitError) using errors.Is/As for classification
 
 ### HTTP Client Infrastructure
 
-- [ ] T008 Create internal/http/client.go with HTTPClient struct wrapping http.Client with connection pooling config (MaxIdleConns=100, IdleConnTimeout=90s per research.md)
-- [ ] T009 Implement internal/http/request.go DoRequest method accepting context.Context, handling timeouts (60s default), and propagating cancellation (<100ms termination per research.md)
-- [ ] T010 Add internal/http/headers.go extractRateLimitHeaders function parsing X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset into RateLimitInfo struct
+- [X] T008 Create internal/http/client.go with HTTPClient struct wrapping http.Client with connection pooling config (MaxIdleConns=100, IdleConnTimeout=90s per research.md)
+- [X] T009 Implement internal/http/request.go DoRequest method accepting context.Context, handling timeouts (60s default), and propagating cancellation (<100ms termination per research.md)
+- [X] T010 Add internal/http/headers.go extractRateLimitHeaders function parsing X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset into RateLimitInfo struct
 
 ### Middleware Layer
 
-- [ ] T011 Create pkg/middleware/retry.go with RetryConfig struct (MaxRetries=3, BaseDelay=1s, MaxDelay=60s per research.md)
-- [ ] T012 Implement pkg/middleware/retry.go exponentialBackoff function: `min(base * 2^attempt, 60s) + jitter` with rand.Intn for jitter calculation
-- [ ] T013 Implement pkg/middleware/retry.go isRetryable function classifying errors by HTTP status (429, 5xx retryable; 4xx non-retryable per research.md)
-- [ ] T014 [P] Create pkg/middleware/telemetry.go with TelemetryHooks interface (OnRequestStart, OnRetry, OnResponse, OnError callbacks)
-- [ ] T015 [P] Implement pkg/middleware/telemetry.go correlation ID injection via context.Context values (generate UUID v4 per request)
+- [X] T011 Create pkg/middleware/retry.go with RetryConfig struct (MaxRetries=3, BaseDelay=1s, MaxDelay=60s per research.md)
+- [X] T012 Implement pkg/middleware/retry.go exponentialBackoff function: `min(base * 2^attempt, 60s) + jitter` with rand.Intn for jitter calculation
+- [X] T013 Implement pkg/middleware/retry.go isRetryable function classifying errors by HTTP status (429, 5xx retryable; 4xx non-retryable per research.md)
+- [X] T014 [P] Create pkg/middleware/telemetry.go with TelemetryHooks interface (OnRequestStart, OnRetry, OnResponse, OnError callbacks)
+- [X] T015 [P] Implement pkg/middleware/telemetry.go correlation ID injection via context.Context values (generate UUID v4 per request)
 
 ### Provider Interface
 
-- [ ] T016 Create pkg/providers/provider.go with Provider interface: `CreateResponse(ctx, req) (Response, error)` and `StreamResponse(ctx, req) (StreamReader, error)` per plan.md
-- [ ] T017 [P] Create pkg/providers/openai/config.go with OpenAIConfig struct (APIKey string, BaseURL string default "https://api.openai.com/v1", Timeout time.Duration)
-- [ ] T018 [P] Implement pkg/providers/openai/config.go ValidateConfig method checking APIKey non-empty, BaseURL valid URL, Timeout positive
+- [X] T016 Create pkg/providers/provider.go with Provider interface: `CreateResponse(ctx, req) (Response, error)` and `StreamResponse(ctx, req) (StreamReader, error)` per plan.md
+- [X] T017 [P] Create pkg/providers/openai/config.go with OpenAIConfig struct (APIKey string, BaseURL string default "https://api.openai.com/v1", Timeout time.Duration)
+- [X] T018 [P] Implement pkg/providers/openai/config.go ValidateConfig method checking APIKey non-empty, BaseURL valid URL, Timeout positive
 
 ### Schema Conversion (for FR-011 Structured Outputs)
 
-- [ ] T019 Create internal/schema/converter.go with StructToJSONSchema function using reflect.TypeOf to extract struct fields
-- [ ] T020 Implement internal/schema/converter.go field processing: extract json struct tags, handle nested structs recursively, support basic types (string, int, float, bool)
-- [ ] T021 Add internal/schema/converter.go validation for required fields via `validate:"required"` tag, generate JSON Schema with "required" array
+- [X] T019 Create internal/schema/converter.go with StructToJSONSchema function using reflect.TypeOf to extract struct fields
+- [X] T020 Implement internal/schema/converter.go field processing: extract json struct tags, handle nested structs recursively, support basic types (string, int, float, bool)
+- [X] T021 Add internal/schema/converter.go validation for required fields via `validate:"required"` tag, generate JSON Schema with "required" array
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -73,37 +73,37 @@
 
 ### Core Client Implementation (US1)
 
-- [ ] T022 [P] [US1] Create pkg/aisdk/config.go with ClientConfig struct (APIKey, BaseURL, Timeout, MaxRetries, Logger fields per data-model.md)
-- [ ] T023 [P] [US1] Implement pkg/aisdk/config.go NewFromEnv constructor reading OPENAI_API_KEY env var, returning error if missing per FR-013
-- [ ] T024 [US1] Create pkg/aisdk/client.go with Client struct holding ClientConfig, HTTPClient, Provider, TelemetryHooks
-- [ ] T025 [US1] Implement pkg/aisdk/client.go New(config) constructor validating config, initializing HTTPClient with retry middleware, creating OpenAI provider
+- [X] T022 [P] [US1] Create pkg/aisdk/config.go with ClientConfig struct (APIKey, BaseURL, Timeout, MaxRetries, Logger fields per data-model.md)
+- [X] T023 [P] [US1] Implement pkg/aisdk/config.go NewFromEnv constructor reading OPENAI_API_KEY env var, returning error if missing per FR-013
+- [X] T024 [US1] Create pkg/aisdk/client.go with Client struct holding ClientConfig, HTTPClient, Provider, TelemetryHooks
+- [X] T025 [US1] Implement pkg/aisdk/client.go New(config) constructor validating config, initializing HTTPClient with retry middleware, creating OpenAI provider
 
 ### Request Types (US1)
 
-- [ ] T026 [P] [US1] Create pkg/aisdk/request.go with CreateResponseRequest struct (Model, Input, Instructions, Temperature, MaxTokens, Stream, TextFormat fields per data-model.md)
-- [ ] T027 [P] [US1] Implement pkg/aisdk/request.go Validate method checking Model non-empty, Input non-empty, Temperature 0.0-2.0, MaxTokens positive per FR-003
-- [ ] T028 [US1] Create pkg/providers/openai/types.go with openAIRequest struct mapping CreateResponseRequest to OpenAI wire format per contracts/openai-responses-v1.json
+- [X] T026 [P] [US1] Create pkg/aisdk/request.go with CreateResponseRequest struct (Model, Input, Instructions, Temperature, MaxTokens, Stream, TextFormat fields per data-model.md)
+- [X] T027 [P] [US1] Implement pkg/aisdk/request.go Validate method checking Model non-empty, Input non-empty, Temperature 0.0-2.0, MaxTokens positive per FR-003
+- [X] T028 [US1] Create pkg/providers/openai/types.go with openAIRequest struct mapping CreateResponseRequest to OpenAI wire format per contracts/openai-responses-v1.json
 
 ### Response Types (US1)
 
-- [ ] T029 [P] [US1] Create pkg/aisdk/response.go with Response struct (ID, Output []OutputItem, Usage TokenUsage, RateLimitInfo per data-model.md)
-- [ ] T030 [P] [US1] Create pkg/aisdk/response.go OutputItem struct (ID, Type, Role, Content []ContentPart per data-model.md)
-- [ ] T031 [P] [US1] Create pkg/aisdk/response.go ContentPart struct (Type, Text, Annotations per data-model.md)
-- [ ] T032 [US1] Implement pkg/aisdk/response.go OutputText convenience method aggregating all ContentPart.Text into single string per FR-012
-- [ ] T033 [US1] Create pkg/providers/openai/types.go with openAIResponse struct mapping OpenAI wire format to Response per contracts/openai-responses-v1.json
+- [X] T029 [P] [US1] Create pkg/aisdk/response.go with Response struct (ID, Output []OutputItem, Usage TokenUsage, RateLimitInfo per data-model.md)
+- [X] T030 [P] [US1] Create pkg/aisdk/response.go OutputItem struct (ID, Type, Role, Content []ContentPart per data-model.md)
+- [X] T031 [P] [US1] Create pkg/aisdk/response.go ContentPart struct (Type, Text, Annotations per data-model.md)
+- [X] T032 [US1] Implement pkg/aisdk/response.go OutputText convenience method aggregating all ContentPart.Text into single string per FR-012
+- [X] T033 [US1] Create pkg/providers/openai/types.go with openAIResponse struct mapping OpenAI wire format to Response per contracts/openai-responses-v1.json
 
 ### OpenAI Provider (US1)
 
-- [ ] T034 [US1] Create pkg/providers/openai/client.go implementing Provider interface with openAIProvider struct holding config and HTTPClient
-- [ ] T035 [US1] Implement pkg/providers/openai/client.go CreateResponse method: validate request, marshal to openAIRequest JSON, POST to /v1/responses, deserialize openAIResponse
-- [ ] T036 [US1] Add pkg/providers/openai/auth.go addAuthHeaders function injecting "Authorization: Bearer {api_key}" header per FR-004
-- [ ] T037 [US1] Implement pkg/providers/openai/errors.go mapOpenAIError function converting HTTP status + OpenAI error JSON to APIError or RateLimitError per FR-005
+- [X] T034 [US1] Create pkg/providers/openai/client.go implementing Provider interface with openAIProvider struct holding config and HTTPClient
+- [X] T035 [US1] Implement pkg/providers/openai/client.go CreateResponse method: validate request, marshal to openAIRequest JSON, POST to /v1/responses, deserialize openAIResponse
+- [X] T036 [US1] Add pkg/providers/openai/auth.go addAuthHeaders function injecting "Authorization: Bearer {api_key}" header per FR-004
+- [X] T037 [US1] Implement pkg/providers/openai/errors.go mapOpenAIError function converting HTTP status + OpenAI error JSON to APIError or RateLimitError per FR-005
 
 ### Integration & Polish (US1)
 
-- [ ] T038 [US1] Wire pkg/providers/openai/client.go into pkg/aisdk/client.go CreateResponse method with telemetry hooks (OnRequestStart, OnResponse, OnError)
-- [ ] T039 [US1] Add pkg/aisdk/client.go context cancellation handling: check ctx.Err() before request, wrap errors with context.Cause per FR-009
-- [ ] T040 [US1] Create examples/quickstart/main.go demonstrating NewFromEnv, CreateResponse call, OutputText extraction per quickstart.md (5 lines of code)
+- [X] T038 [US1] Wire pkg/providers/openai/client.go into pkg/aisdk/client.go CreateResponse method with telemetry hooks (OnRequestStart, OnResponse, OnError)
+- [X] T039 [US1] Add pkg/aisdk/client.go context cancellation handling: check ctx.Err() before request, wrap errors with context.Cause per FR-009
+- [X] T040 [US1] Create examples/quickstart/main.go demonstrating NewFromEnv, CreateResponse call, OutputText extraction per quickstart.md (5 lines of code)
 - [ ] T041 [US1] Add godoc comments to all pkg/aisdk/ exported types citing docs/providers/openai.md line ranges per Principle VI
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - developers can generate text with <5 min setup
